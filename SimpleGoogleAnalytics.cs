@@ -90,6 +90,9 @@ namespace devm
 
 		public void StartSession()
 		{
+			if(sessionStarted)
+				return;
+
 			Hashtable ht = BaseValues();
 			ht.Add("sc", "start");
 			SendData(ht);
