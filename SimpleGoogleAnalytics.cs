@@ -34,6 +34,44 @@ namespace devm
 
 		bool sessionStarted = false;
 
+		[Serializable]
+		public class ValidateResponse
+		{
+
+			public List<HitParsingResultEntry> hitParsingResult;
+
+			[Serializable]
+			public class HitParsingResultEntry
+			{
+				public bool valid;
+			}
+
+
+			public bool IsValid
+			{
+				get
+				{ 
+					return hitParsingResult[0].valid;
+				}
+			}
+
+			/*
+			{
+				"hitParsingResult": [ {
+					"valid": true,
+					"parserMessage": [ ],
+					"hit": "/debug/collect?cid=B4BEDE4F-A4C7-54E3-8DDD-6D883A244C0C\"
+				} ],
+				"parserMessage": [ {
+					"messageType": "INFO",
+					"description": "Found 1 hit in the request."
+				} ]
+			}
+			*/
+	
+
+		}
+
 		void Awake()
 		{
 
@@ -90,11 +128,12 @@ namespace devm
 
 		public void StartSession()
 		{
-			if(sessionStarted)
+			if (sessionStarted)
 				return;
-
+			
 			Hashtable ht = BaseValues();
 			ht.Add("sc", "start");
+			ht.Add("dp", "start");
 			SendData(ht);
 			sessionStarted = true;
 		}
@@ -209,7 +248,18 @@ namespace devm
 			if (OnlyValidate)
 			{
 				if (string.IsNullOrEmpty(www.error))
-					Debug.Log(www.text);
+				{
+					
+					var valid = JsonUtility.FromJson<ValidateResponse>(www.text);
+
+					if (valid.IsValid)
+						Debug.Log("SimpleGoogleAnalytics hit ok");
+					else
+					{
+						Debug.LogWarning("SimpleGoogleAnalytics, hit failed"); 
+						Debug.Log(www.text);
+					}	
+				}
 				else
 					Debug.Log(www.error);
 			}
