@@ -9,16 +9,17 @@ using UnityEngine.SceneManagement;
 
 namespace devm
 {
-	
+
 	public class SimpleGoogleAnalytics : MonoBehaviour
 	{
 
 		const string CollectUrl = "https://www.google-analytics.com/collect";
 		const string CollectUrlValidate = "https://www.google-analytics.com/debug/collect";
-				
+
 		public int Version = 1;
 		public string AppName;
 		public string GoogleTrackingID;
+		public bool AnonymizeIP = false;
 
 		[Tooltip("Does not record, only verifies that the tracking data is correct")]
 		public bool OnlyValidate = false;
@@ -50,7 +51,7 @@ namespace devm
 			public bool IsValid
 			{
 				get
-				{ 
+				{
 					return hitParsingResult[0].valid;
 				}
 			}
@@ -68,7 +69,7 @@ namespace devm
 				} ]
 			}
 			*/
-	
+
 
 		}
 
@@ -105,6 +106,9 @@ namespace devm
 			ht.Add("av", appVersion);
 			ht.Add("ds", Application.platform.ToString());
 
+			if (AnonymizeIP)
+				ht.Add("aip", 1);
+
 			return ht;
 		}
 
@@ -112,13 +116,13 @@ namespace devm
 		{
 			Hashtable ht = BaseValues();
 
-			ht.Add("t", "event"); 
+			ht.Add("t", "event");
 			ht.Add("ec", category);
-			ht.Add("ea", action); 
+			ht.Add("ea", action);
 			if (label != null)
 				ht.Add("el", label);
 			if (value != 0L)
-				ht.Add("ev", value); 
+				ht.Add("ev", value);
 
 			SendData(ht);
 		}
@@ -130,7 +134,7 @@ namespace devm
 		{
 			if (sessionStarted)
 				return;
-			
+
 			Hashtable ht = BaseValues();
 			ht.Add("sc", "start");
 			ht.Add("dp", "start");
@@ -144,7 +148,7 @@ namespace devm
 			Hashtable ht = BaseValues();
 
 			ht.Add("t", "pageview");
-			ht.Add("dh", hostname); 
+			ht.Add("dh", hostname);
 			ht.Add("dp", page);
 			ht.Add("dt", title);
 
@@ -157,7 +161,7 @@ namespace devm
 			Hashtable ht = BaseValues();
 
 			ht.Add("t", "screenview");
-			ht.Add("cd", screen);   
+			ht.Add("cd", screen);
 
 			SendData(ht);
 		}
@@ -174,7 +178,7 @@ namespace devm
 			ht.Add("tr", revenue);
 			ht.Add("ts", shipping);
 			ht.Add("tt", tax);
-			ht.Add("cu", currency); 
+			ht.Add("cu", currency);
 
 			SendData(ht);
 		}
@@ -213,7 +217,7 @@ namespace devm
 		{
 			Hashtable ht = BaseValues();
 
-			ht.Add("t", "exception"); 
+			ht.Add("t", "exception");
 			ht.Add("dh", description);
 			ht.Add("dp", fatal ? "1" : "0");
 
@@ -222,7 +226,7 @@ namespace devm
 
 		void SendData(Hashtable values)
 		{
-			
+
 			WWWForm form = new WWWForm();
 
 			foreach (var key in values.Keys)
@@ -231,7 +235,7 @@ namespace devm
 			}
 
 			StartCoroutine(SendDataDo(form));
-		
+
 		}
 
 
@@ -249,19 +253,19 @@ namespace devm
 			{
 				if (string.IsNullOrEmpty(www.error))
 				{
-					
+
 					var valid = JsonUtility.FromJson<ValidateResponse>(www.text);
 
 					if (valid.IsValid)
 						Debug.Log("SimpleGoogleAnalytics hit ok");
 					else
 					{
-						Debug.LogWarning("SimpleGoogleAnalytics, hit failed"); 
+						Debug.LogWarning("SimpleGoogleAnalytics, hit failed");
 						Debug.Log(www.text);
-					}	
+					}
 				}
 				else
-					Debug.Log(www.error);
+					Debug.LogWarning(www.error);
 			}
 
 		}
