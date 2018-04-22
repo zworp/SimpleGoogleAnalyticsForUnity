@@ -19,12 +19,15 @@ namespace devm
 		public int Version = 1;
 		public string AppName;
 		public string GoogleTrackingID;
-		public bool AnonymizeIP = false;
 
 		[Tooltip("Does not record, only verifies that the tracking data is correct")]
 		public bool OnlyValidate = false;
 
 		public bool AutoTrackScenes = false;
+
+		[Header("Anonymize, settings both of these to true makes sure no peronal data is tracked")]
+		public bool AnonymizeID = false;
+		public bool AnonymizeIP = false;
 
 		string clientId;
 
@@ -56,7 +59,7 @@ namespace devm
 				}
 			}
 
-			/*
+			/* Example of response:
 			{
 				"hitParsingResult": [ {
 					"valid": true,
@@ -75,8 +78,26 @@ namespace devm
 
 		void Awake()
 		{
+			if (AnonymizeID)
+			{
+				const string key = "_simplGA_anonID";
+				if (PlayerPrefs.HasKey(key))
+				{
+					clientId = PlayerPrefs.GetString(key);
+				}
+				else
+				{
+					//Reasonably unique, since System.Guid is not included in micro mscorlib 
+					clientId = UnityEngine.Random.Range(0, int.MaxValue).ToString("x8") + UnityEngine.Random.Range(0, int.MaxValue).ToString("x8");
+					PlayerPrefs.SetString(key, clientId);
+					PlayerPrefs.Save();
+				}
+			}
+			else
+			{
+				clientId = SystemInfo.deviceUniqueIdentifier;
+			}
 
-			clientId = SystemInfo.deviceUniqueIdentifier;
 			appId = Application.identifier;
 			appVersion = Application.version;
 
